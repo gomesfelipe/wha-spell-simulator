@@ -20,6 +20,8 @@ A community Discord has been created for people who want to discuss ideas, share
 
 Community Discord: [discord.gg/XkdEe4wB](https://discord.gg/XkdEe4wB)
 
+For larger changes or faster experimentation, feel free to fork the project. Community forks may move in different directions from this original version.
+
 ## Fan Project Notice
 
 This is an unofficial fan-made project for learning, experimentation, and appreciation. It is not affiliated with, endorsed by, or sponsored by the official creators, publishers, licensors, or production partners of *Witch Hat Atelier*.
