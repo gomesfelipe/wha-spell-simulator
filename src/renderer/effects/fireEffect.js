@@ -124,6 +124,15 @@ function updateFlowFireParticle(particle, flow, dt) {
   particle.age += dt;
   particle.x += particle.vx * dt;
   particle.y += particle.vy * dt;
+
+  const buoyancy = 0.06 * dt;
+  particle.vx += flow.direction.x * buoyancy;
+  particle.vy += flow.direction.y * buoyancy;
+
+  const turbulence = Math.sin(particle.age * 0.15 + particle.phase) * 0.12 * dt;
+  particle.vx += flow.side.x * turbulence;
+  particle.vy += flow.side.y * turbulence;
+
   particle.vx *= 0.992 - flow.convergence.progress * 0.045;
   particle.vy *= 0.992 - flow.convergence.progress * 0.045;
 }
@@ -133,10 +142,21 @@ function drawFireParticle(ctx, particle, flow, spellIR, opacity) {
   const alpha = flow.suspended || flow.convergence.active
     ? steadyParticleAlpha(particle, spellIR, 10) * (0.82 + depth * 0.22)
     : particleAlpha(particle) * (0.78 + depth * 0.24) * opacity;
+  
+  const lifeFraction = flow.suspended ? 0 : clamp(particle.age / Math.max(1, particle.life));
+  const shrink = flow.suspended ? 1 : Math.max(0.01, 1 - lifeFraction);
   const displayRadius = flow.suspended
     ? particle.radius * (1.04 + depth * 0.22) * (1 - flow.convergence.progress * 0.2)
-    : particle.radius * (0.86 + depth * 0.64) * (1 - flow.convergence.progress * 0.24);
+    : particle.radius * shrink * (1.4 + depth * 0.4) * (1 - flow.convergence.progress * 0.24);
+
+  if (displayRadius <= 0.1) return;
+
   const point = convergePoint(particle, flow.convergence, particle.phase);
+  
+  const r = 255;
+  const g = Math.floor(Math.max(0, 240 - lifeFraction * 320));
+  const b = Math.floor(Math.max(0, 160 - lifeFraction * 380));
+  
   const gradient = ctx.createRadialGradient(
     point.x,
     point.y,
@@ -146,9 +166,10 @@ function drawFireParticle(ctx, particle, flow, spellIR, opacity) {
     displayRadius * (1.2 - alpha * 0.2)
   );
 
-  gradient.addColorStop(0, `rgba(255, 242, 160, ${alpha * 0.9})`);
-  gradient.addColorStop(0.45, `rgba(243, 116, 43, ${alpha * 0.7})`);
-  gradient.addColorStop(1, `rgba(176, 47, 32, 0)`);
+  gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+  gradient.addColorStop(0.4, `rgba(${r}, ${Math.max(0, g - 50)}, 0, ${alpha * 0.6})`);
+  gradient.addColorStop(1, `rgba(${r}, 0, 0, 0)`);
+
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.arc(point.x, point.y, displayRadius, 0, Math.PI * 2);
